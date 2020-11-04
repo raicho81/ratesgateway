@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "RatesCollector": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    },
+    "DockerCustom": {
+      "commandName": "Executable",
+      "executablePath": "docker.exe",
+      "commandLineArgs": "run -dt -v \"C:\\Users\\raicho\\vsdbg\\vs2017u5:/remote_debugger:rw\" -v \"G:\\prg\\RatesGateway\\RatesCollector:/app\" -v \"G:\\prg\\RatesGateway:/src/\" -v \"C:\\Users\\raicho\\.nuget\\packages\\:/root/.nuget/fallbackpackages\" -e \"DOTNET_USE_POLLING_FILE_WATCHER=1\" -e \"NUGET_PACKAGES=/root/.nuget/fallbackpackages\" -e \"NUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages\" --name RatesCollector --entrypoint tail ratescollector:dev -f /dev/null"
+    }
+  }
+}

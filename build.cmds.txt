@@ -1,0 +1,2 @@
+docker build -f "G:\prg\RatesGateway\RatesCollector\Dockerfile" --force-rm -t ratescollector  --label "com.microsoft.created-by=visual-studio" --label "com.microsoft.visual-studio.project-name=RatesCollector" "G:\prg\RatesGateway"
+docker build -f "G:\prg\RatesGateway\StatisticsCollector\Dockerfile" --force-rm -t statisticscollector  --label "com.microsoft.created-by=visual-studio" --label "com.microsoft.visual-studio.project-name=StatisticsCollector" "G:\prg\RatesGateway"

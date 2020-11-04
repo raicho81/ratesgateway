@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RatesCollector", "RatesCollector\RatesCollector.csproj", "{316AB88F-F975-4865-B0F1-9521087F21D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{90A9CFCE-C87C-4626-9947-89BD2A9BA1EB}"
+	ProjectSection(SolutionItems) = preProject
+		DB_Create_Script.sql = DB_Create_Script.sql
+		gateway-stack.yml = gateway-stack.yml
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RatesGatwewayApi", "RatesGatwewayApi\RatesGatwewayApi.csproj", "{26195105-D8BA-4EBC-99B1-DAF4233382E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatisticsCollector", "StatisticsCollector\StatisticsCollector.csproj", "{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{316AB88F-F975-4865-B0F1-9521087F21D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{316AB88F-F975-4865-B0F1-9521087F21D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{316AB88F-F975-4865-B0F1-9521087F21D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{316AB88F-F975-4865-B0F1-9521087F21D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26195105-D8BA-4EBC-99B1-DAF4233382E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26195105-D8BA-4EBC-99B1-DAF4233382E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26195105-D8BA-4EBC-99B1-DAF4233382E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26195105-D8BA-4EBC-99B1-DAF4233382E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2E3C9460-81AE-4220-8861-8218C2EBE06B}
+	EndGlobalSection
+EndGlobal

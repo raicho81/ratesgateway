@@ -1,0 +1,45 @@
+version: '3.1'
+
+services:
+  rabbitmq:
+    image: rabbitmq
+    restart: always
+
+  redis:
+    image: redis
+    restart: always
+
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - gateway-postgres-data:/var/lib/postgresql/data/pgdata
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: secret
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+  
+  rates_collector:
+    image: ratescollector
+    restart: always
+    depends_on:
+      - db
+      - redis
+
+  stats_collector:
+    image: statisticscollector
+    restart: always
+    depends_on:
+      - db
+    expose:
+      - 80
+
+volumes:
+  gateway-postgres-data:
