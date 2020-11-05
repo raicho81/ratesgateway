@@ -11,7 +11,7 @@ namespace RatesGatwewayApi.Models
 
         public string StatusMessage { get; set; }
 
-        public double Timestamp { get; set; }
+        public int Timestamp { get; set; }
 
         public string Symbol { get; set; }
         public Dictionary<string, double> ExchangeRates { get; set; } = new Dictionary<string, double>();

@@ -1,10 +1,6 @@
--- Adminer 4.7.7 PostgreSQL dump
-
-\connect "postgres";
-
-DROP TABLE IF EXISTS "ExchangeRates";
+DROP TABLE IF EXISTS "ExchangeRates" CASCADE;
 DROP SEQUENCE IF EXISTS "ExchangeRates_ExchangeRatesId_seq";
-CREATE SEQUENCE "ExchangeRates_ExchangeRatesId_seq" START 1;
+CREATE SEQUENCE "ExchangeRates_ExchangeRatesId_seq" START 264;
 
 CREATE TABLE "public"."ExchangeRates" (
     "ExchangeRatesId" integer DEFAULT nextval('"ExchangeRates_ExchangeRatesId_seq"') NOT NULL,
@@ -101,7 +97,7 @@ INSERT INTO "ExchangeRates" ("ExchangeRatesId", "Timestamp", "Base") VALUES
 
 DROP TABLE IF EXISTS "Rates";
 DROP SEQUENCE IF EXISTS "Rates_RateId_seq";
-CREATE SEQUENCE "Rates_RateId_seq" START 1;
+CREATE SEQUENCE "Rates_RateId_seq" START 14281;
 
 CREATE TABLE "public"."Rates" (
     "RateId" integer DEFAULT nextval('"Rates_RateId_seq"') NOT NULL,
@@ -13556,7 +13552,7 @@ INSERT INTO "Rates" ("RateId", "ExchangeRatesId", "Symbol", "RateValue") VALUES
 
 DROP TABLE IF EXISTS "Stats";
 DROP SEQUENCE IF EXISTS "Stats_Id_seq";
-CREATE SEQUENCE "Stats_Id_seq" START 1;
+CREATE SEQUENCE "Stats_Id_seq" START 13;
 
 CREATE TABLE "public"."Stats" (
     "Id" integer DEFAULT nextval('"Stats_Id_seq"') NOT NULL,
@@ -13581,5 +13577,3 @@ INSERT INTO "Stats" ("Id", "ServiceName", "RequestId", "ClientId", "Timestamp") 
 (10,	'EXT_Service_1',	'026fee85-d73c-4849-8834-1bfc9c1ed0ae',	'1234',	'2020-10-31 08:03:05'),
 (11,	'EXT_Service_1',	'bc237afd-4577-48c8-8af3-29c09e4b30a1',	'1234',	'2020-10-31 08:03:05'),
 (12,	'EXT_Service_1',	'349951c1-08ca-4cf0-8554-10c73c8d4f89',	'1234',	'2020-10-31 08:03:05');
-
--- 2020-11-04 23:11:51.988599+00

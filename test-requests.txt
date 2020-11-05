@@ -2,8 +2,17 @@
  "requestId": "e0cbadba-3000-418f-94d8-1bd57c05aadf",
  "timestamp": 1604131385,
  "client": "1234",
- "currency": "USD",
+ "currency": "USD"
 }
+
+{
+ "requestId": "e0cbadba-3000-418f-94d8-1bd57c05aadf",
+ "timestamp": 1604131385,
+ "client": "1234",
+ "currency": "USD",
+ "period": 24
+}
+
 
 {
  "requestId": "bc237afd-4577-48c8-8af3-29c09e4b30a1",

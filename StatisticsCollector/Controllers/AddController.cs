@@ -7,6 +7,7 @@ using RatesGatwewayApi;
 using StatisticsCollector.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace StatisticsCollector.Controllers
 {
@@ -22,8 +23,10 @@ namespace StatisticsCollector.Controllers
             this.db = db;
             this._logger = logger;
         }
-        // POST json_api/<ValuesController>
+
         [HttpPost]
+        [Produces("application/json")]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult<StatsResponse>> Post([FromBody] StatsRequest value)
         {
             Guid requestUUID;
@@ -34,7 +37,7 @@ namespace StatisticsCollector.Controllers
             catch (FormatException)
             {
                 _logger.LogError($"Inavlid uuid format: {value.RequestId}");
-                return Created("PostAdd", new StatsResponse
+                return BadRequest(new StatsResponse
                     {
                         StatusCode = (int)ResponseStatusCodes.InvalidRequestId,
                         StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.InvalidRequestId]
@@ -42,7 +45,7 @@ namespace StatisticsCollector.Controllers
                 );
             }
 
-            _logger.LogInformation($"Saving stats tos DB: RequestId:{value.RequestId}, ClientId:{value.ClientId}, ServiceName:{value.ServiceName},Timestamp:{value.Timestamp}");
+            _logger.LogInformation($"Saving stats to DB: RequestId:{value.RequestId}, ClientId:{value.ClientId}, ServiceName:{value.ServiceName},Timestamp:{value.Timestamp}");
             db.Stats.Add(new Stats
                 {
                     RequestId = requestUUID,

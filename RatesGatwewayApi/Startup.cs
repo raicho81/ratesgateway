@@ -28,7 +28,7 @@ namespace RatesGatwewayApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            //services.AddHttpClient();
+            services.AddHttpClient();
             services.AddDbContext<ExchangeRatesContext>(options =>
                 {
                     options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));

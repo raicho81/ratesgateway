@@ -11,28 +11,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using RatesGatwewayApi.Models;
 
+
 namespace RatesGatwewayApi.Controllers
 {
     [Route("json_api/[controller]")]
     [ApiController]
-    public class CurrentController : ControllerBase
+    public class CurrentController : BaseApiController
     {
-        private readonly ExchangeRatesContext db;
-        private readonly HttpClient client = new HttpClient(
-            new HttpClientHandler()
-            {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            }
-        );
-        private readonly ILogger _logger;
-        public IConfiguration Configuration { get; }
-        //private readonly IHttpClientFactory _clientFactory;
-        public CurrentController(ExchangeRatesContext db, ILogger<CurrentController> logger, IConfiguration conf) // IHttpClientFactory clientFactory;
+        public CurrentController(ExchangeRatesContext db, ILogger<CurrentController> logger, IConfiguration conf, IHttpClientFactory clientFactory)
         {
             this.db = db;
             _logger = logger;
-            this.Configuration = conf;
-            //this._clientFactory = clientFactory;
+            Configuration = conf;
+            _clientFactory = clientFactory;
         }
 
         [HttpPost]
@@ -51,7 +42,7 @@ namespace RatesGatwewayApi.Controllers
                 var errorResponse = new ErrorResponse
                 {
                     Status = (int)ResponseStatusCodes.InvalidUUID,
-                    StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.InvalidPeriod],
+                    StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.InvalidUUID],
                 };
                 return BadRequest(errorResponse);
             }
@@ -108,40 +99,6 @@ namespace RatesGatwewayApi.Controllers
             };
 
             return Created("PostCurrent", response);
-        }
-        public async Task SendStats(StatsRequest stats)
-        {
-            // Set HTTP Headers
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json")
-            );
-            client.DefaultRequestHeaders.Add("User-Agent", "RatesGatewayApi");
-            client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
-            client.DefaultRequestHeaders.Add("Connection", "keep-alive");
-
-            var statsResponse = new StatsResponse();
-            _logger.LogInformation("Sending stats to stats collector service");
-            try
-            {
-                string payload = JsonSerializer.Serialize(stats);
-                HttpContent content = new StringContent(payload, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync($"http://{Configuration.GetValue<string>("StatsHost")}/json_api/add", content);
-                statsResponse = await JsonSerializer.DeserializeAsync<StatsResponse>(await response.Content.ReadAsStreamAsync());
-                _logger.LogInformation($"Stats service response: statusCode:{statsResponse.StatusCode}, statusMessage:{statsResponse.StatusMessage}");
-            }
-            catch (ArgumentNullException e)
-            {
-                _logger.LogError(e.ToString());
-            }
-            catch (HttpRequestException e)
-            {
-                _logger.LogError(e.ToString());
-            }
-            catch (JsonException e)
-            {
-                _logger.LogError(e.ToString());
-            }
         }
     }
 }

@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Timers;
 using System.Linq;
-using RatesCollector.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
+using RatesCollector.Models;
 
 namespace RatesCollector
 {
