@@ -35,5 +35,14 @@ services:
       - db
       - redis
 
+  stats_collector:
+    image: statisticscollector
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+    expose:
+      - 80
+
 volumes:
   gateway-postgres-data:

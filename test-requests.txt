@@ -1,3 +1,4 @@
+// RatesGatewayApi - json_api/current
 {
  "requestId": "e0cbadba-3000-418f-94d8-1bd57c05aadf",
  "timestamp": 1604131385,
@@ -5,6 +6,7 @@
  "currency": "USD"
 }
 
+// RatesGatewayApi - json_api/history
 {
  "requestId": "e0cbadba-3000-418f-94d8-1bd57c05aadf",
  "timestamp": 1604131385,
@@ -14,6 +16,7 @@
 }
 
 
+// Stats collector
 {
  "requestId": "bc237afd-4577-48c8-8af3-29c09e4b30a1",
  "timestamp": 1604131385,

@@ -1,13 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RatesGatwewayApi;
 using StatisticsCollector.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
+
 
 namespace StatisticsCollector.Controllers
 {
@@ -16,12 +20,14 @@ namespace StatisticsCollector.Controllers
     public class AddController : ControllerBase
     {
         private readonly ILogger _logger;
+        private readonly StatsContext db;
+        private readonly IConfiguration Configuration;
 
-        private StatsContext db;
-        public AddController(StatsContext db, ILogger<AddController> logger)
+        public AddController(StatsContext db, ILogger<AddController> logger, IConfiguration conf)
         {
             this.db = db;
-            this._logger = logger;
+            _logger = logger;
+            Configuration = conf;
         }
 
         [HttpPost]
@@ -45,6 +51,8 @@ namespace StatisticsCollector.Controllers
                 );
             }
 
+            PublishToRabbitMQ(value); // Send to RabbitMQ
+
             _logger.LogInformation($"Saving stats to DB: RequestId:{value.RequestId}, ClientId:{value.ClientId}, ServiceName:{value.ServiceName},Timestamp:{value.Timestamp}");
             db.Stats.Add(new Stats
                 {
@@ -59,20 +67,56 @@ namespace StatisticsCollector.Controllers
             }
             catch (DbUpdateConcurrencyException e)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(e.Message);
             }
             catch (DbUpdateException e)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(e.Message);
             }
-
-            // TODO: Send to RabbitMQ
 
             return Created("PostAdd",
                         new StatsResponse{
                             StatusCode = (int)ResponseStatusCodes.Success,
                             StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]}
                         );
+        }
+
+        private void PublishToRabbitMQ(StatsRequest statsRequest)
+        {
+            var factory = new ConnectionFactory() { HostName = Configuration.GetValue<string>("RabbitMQHostName") };
+            try
+            {
+                using (var connection = factory.CreateConnection())
+                using (var channel = connection.CreateModel())
+                {
+                    channel.QueueDeclare(queue: "StatsQueue",
+                                         durable: false,
+                                         exclusive: false,
+                                         autoDelete: false,
+                                         arguments: null);
+
+                    string message = JsonSerializer.Serialize<StatsRequest>(statsRequest);
+                    var body = Encoding.UTF8.GetBytes(message);
+
+                    channel.BasicPublish(exchange: Configuration.GetValue<string>("RabbitMQExchange"),
+                                         routingKey: "StatsQueue",
+                                         basicProperties: null,
+                                         body: body);
+                    _logger.LogInformation("Sent {0} to RabbitMQ", message);
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                _logger.LogError(e.Message);
+            }
+            catch (EncoderFallbackException e)
+            {
+                _logger.LogError(e.Message);
+            }
+            catch (BrokerUnreachableException e)
+            {
+                _logger.LogError(e.Message);
+            }
         }
     }
 }
