@@ -1,0 +1,9 @@
+﻿{
+  "apiUrl": "http://data.fixer.io/api/latest",
+  "apiKey": "d795e3d09e9f5b98bbb4dba3192cdff4",
+  "baseCurrency": "EUR",
+  "requestRatesInterval": 60,
+  "redisHost": "redis",
+  "redisPort": 6379,
+  "redisPassword": "secret"
+}

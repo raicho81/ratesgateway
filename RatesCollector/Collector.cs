@@ -29,13 +29,13 @@ namespace RatesCollector
         private int requestRatesInterval;
         private readonly ConnectionMultiplexer redisMuxer;
 
-        public Collector()
+        public Collector(string apiUrl, string apiKey, string baseCurrency, int requestRatesInterval, string redisHost, int redisPort, string redisPassword)
         {
-            apiUrl = "http://data.fixer.io/api/latest";
-            apiKey = "d795e3d09e9f5b98bbb4dba3192cdff4";
-            baseSymbol = "EUR";
-            requestRatesInterval = 3600; // Request exchange rates every hour
-            redisMuxer = ConnectionMultiplexer.Connect("redis:6379, password=secret");
+            this.apiUrl = apiUrl;
+            this.apiKey = apiKey;
+            baseSymbol = baseCurrency;
+            this.requestRatesInterval = requestRatesInterval;
+            redisMuxer = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}, password={redisPassword}");
         }
 
         private async void OnTimedEvent(Object source, ElapsedEventArgs e)
