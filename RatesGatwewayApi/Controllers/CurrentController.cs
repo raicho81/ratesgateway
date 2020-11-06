@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Caching.Distributed;
 using RatesGatwewayApi.Models;
 using StackExchange.Redis;
 
@@ -34,7 +33,6 @@ namespace RatesGatwewayApi.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult<CurrentResponse>> Post([FromBody] CurrentRequest value)
         {
-            _logger.LogDebug($"Processing incoming request. ClientId:{value.ClientId}, RequestId:{value.RequestId}, Currency:{value.Currency}, Timestamp:{value.Timestamp}");
             Guid requestUUID;
             try
             {
@@ -52,7 +50,7 @@ namespace RatesGatwewayApi.Controllers
 
             // Check in Redis if the request was served already and add it to the set of served requests if not already present 
             IDatabase redisConn = _redisMuxer.GetDatabase();
-            if (!redisConn.SetAdd("serverd:req:ids", value.RequestId))
+            if (!await redisConn.SetAddAsync(servedRequestsIDsSetKey, value.RequestId))
             {
                 var errorResponse = new ErrorResponse
                 {
@@ -62,7 +60,7 @@ namespace RatesGatwewayApi.Controllers
                 return BadRequest(errorResponse);
             }
 
-            // Check for cached value in Redis, if there is no value in Redis the Rates Collector didn't pull any data yet
+            // Check for cached rate value in Redis, if there is no value in Redis the Rates Collector didn't pull any data yet
             string redisRateKey = $"current:{baseCurrency}:{value.Currency}";
             string timestampAndValueStr = await redisConn.StringGetAsync(redisRateKey);
             if (timestampAndValueStr == RedisValue.Null)
@@ -78,24 +76,6 @@ namespace RatesGatwewayApi.Controllers
             string[] timeStampAndRate = timestampAndValueStr.Split(":");
             double currTimestamp = Convert.ToDouble(timeStampAndRate[0]);
             double currRate = Convert.ToDouble(timeStampAndRate[1]);
-
-            //if (!db.ExchangeRates.Any())
-            //{
-            //    var errorResponse = new CurrentResponse
-            //    {
-            //        Status = (int) ResponseStatusCodes.NoData,
-            //        StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.NoData],
-            //    };
-            //    return Created("PostCurrent", errorResponse);
-            //}
-
-            //var erates = db.ExchangeRates
-            //    .OrderByDescending(er => er.Timestamp)
-            //    .First();
-
-            //var rate = db.Rates
-            //    .Where(s => s.ExchangeRatesId == erates.ExchangeRatesId && s.Symbol == value.Currency)
-            //    .First();
 
             // Send stats
             var stats = new StatsRequest

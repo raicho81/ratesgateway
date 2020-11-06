@@ -47,6 +47,15 @@ services:
     expose:
       - 80
 
+  ratesgatewayapi:
+    image: ratesgatewayapi
+    restart: always
+    depends_on:
+      - db
+      - redis
+    ports:
+      - 8888:80
+
 volumes:
   gateway-postgres-data:
   gateway-redis-data:

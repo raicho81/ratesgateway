@@ -17,6 +17,7 @@ namespace RatesGatwewayApi.Controllers
     public class BaseApiController: ControllerBase
     {
         protected readonly string baseCurrency = "EUR";
+        protected readonly string servedRequestsIDsSetKey = "served:req:ids";
         protected readonly ExchangeRatesContext db;
         protected readonly ILogger _logger;
         protected readonly IConfiguration Configuration;
@@ -49,17 +50,14 @@ namespace RatesGatwewayApi.Controllers
             client.DefaultRequestHeaders.Add("Connection", "keep-alive");
 
             var statsResponse = new StatsResponse();
-            _logger.LogInformation("Sending stats to stats collector service");
+            _logger.LogDebug("Sending stats to stats collector service");
             try
             {
                 string payload = JsonSerializer.Serialize(stats);
                 HttpContent reqContent = new StringContent(payload, Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await client.PostAsync($"http://{Configuration.GetValue<string>("StatsHost")}:{Configuration.GetValue<string>("StatsPort")}/json_api/add", reqContent);
-                response.EnsureSuccessStatusCode();
                 string respContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation($"Stats collector response: {respContent}");
-                //statsResponse = JsonSerializer.Deserialize<StatsResponse>(respContent);
-                //_logger.LogInformation($"Stats service response: statusCode:{statsResponse.StatusCode}, statusMessage:{statsResponse.StatusMessage}");
+                _logger.LogDebug($"Stats collector response: {respContent}");
             }
             catch (ArgumentNullException e)
             {
