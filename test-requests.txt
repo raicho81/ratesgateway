@@ -32,5 +32,7 @@
     </get>
 </command>
 
-
+<command id="f01bcc04-c208-419f-b20c-82d51ff658ca" >
+    <history consumer="13617162" currency="AUD" period="24" />
+</command>
 

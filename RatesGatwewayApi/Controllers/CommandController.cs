@@ -119,12 +119,13 @@ namespace RatesGatwewayApi.Controllers
                 }
 
                 // Send stats
+                double timestampNow = (int)TimestampConversions.DateTimeToUnixTime(DateTime.Now.ToUniversalTime());
                 var stats = new StatsRequest
                 {
                     RequestId = xmlCmd.id,
                     ClientId = xmlCmd.cmdHist.consumer,
                     ServiceName = "EXT_Service_1",
-                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(DateTime.Now.ToUniversalTime())
+                    Timestamp = timestampNow
                 };
                 await SendStats(stats);
 
@@ -135,7 +136,7 @@ namespace RatesGatwewayApi.Controllers
                     DateTime dtNow = DateTime.Now.ToUniversalTime();
                     var response = new XMLCommandResponse()
                     {
-                        timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow.ToUniversalTime()),
+                        timestamp = timestampNow,
                         currency = xmlCmd.cmdHist.currency,
                         statusCode = (int)ResponseStatusCodes.Success,
                         statusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
@@ -170,7 +171,7 @@ namespace RatesGatwewayApi.Controllers
 
                     var response = new XMLCommandResponse()
                     {
-                        timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow.ToUniversalTime()),
+                        timestamp = timestampNow,
                         currency = xmlCmd.cmdHist.currency,
                         statusCode = (int)ResponseStatusCodes.Success,
                         statusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
