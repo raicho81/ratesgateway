@@ -9,15 +9,32 @@ using RatesGatwewayApi.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
+
 
 namespace RatesGatwewayApi.Controllers
 {
     public class BaseApiController: ControllerBase
     {
-        protected ExchangeRatesContext db;
-        protected ILogger _logger;
-        protected IConfiguration Configuration { get; set; }
-        protected IHttpClientFactory _clientFactory;
+        protected readonly string baseCurrency = "EUR";
+        protected readonly ExchangeRatesContext db;
+        protected readonly ILogger _logger;
+        protected readonly IConfiguration Configuration;
+        protected readonly IHttpClientFactory _clientFactory;
+        protected readonly IConnectionMultiplexer _redisMuxer;
+
+        public BaseApiController(ExchangeRatesContext db,
+                                 ILogger<CurrentController> logger,
+                                 IConfiguration conf,
+                                 IHttpClientFactory clientFactory,
+                                 IConnectionMultiplexer redisMuxer)
+        {
+            this.db = db;
+            _logger = logger;
+            Configuration = conf;
+            _clientFactory = clientFactory;
+            _redisMuxer = redisMuxer;
+        }
 
         public async Task SendStats(StatsRequest stats)
         {

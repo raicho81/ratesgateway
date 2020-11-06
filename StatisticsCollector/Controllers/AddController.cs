@@ -67,11 +67,11 @@ namespace StatisticsCollector.Controllers
             }
             catch (DbUpdateConcurrencyException e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e.ToString());
             }
             catch (DbUpdateException e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e.ToString());
             }
 
             return Created("PostAdd",
@@ -107,15 +107,15 @@ namespace StatisticsCollector.Controllers
             }
             catch (ArgumentNullException e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e.ToString());
             }
             catch (EncoderFallbackException e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e.ToString());
             }
             catch (BrokerUnreachableException e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e.ToString());
             }
         }
     }

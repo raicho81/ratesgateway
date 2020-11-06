@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Distributed;
 using RatesGatwewayApi.Models;
+using StackExchange.Redis;
 
 
 namespace RatesGatwewayApi.Controllers
@@ -18,12 +20,13 @@ namespace RatesGatwewayApi.Controllers
     [ApiController]
     public class CurrentController : BaseApiController
     {
-        public CurrentController(ExchangeRatesContext db, ILogger<CurrentController> logger, IConfiguration conf, IHttpClientFactory clientFactory)
+        public CurrentController(ExchangeRatesContext db,
+                                 ILogger<CurrentController> logger,
+                                 IConfiguration conf,
+                                 IHttpClientFactory clientFactory,
+                                 IConnectionMultiplexer redisMuxer):
+            base(db, logger, conf, clientFactory, redisMuxer)
         {
-            this.db = db;
-            _logger = logger;
-            Configuration = conf;
-            _clientFactory = clientFactory;
         }
 
         [HttpPost]
@@ -31,7 +34,7 @@ namespace RatesGatwewayApi.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult<CurrentResponse>> Post([FromBody] CurrentRequest value)
         {
-            _logger.LogInformation($"Processing incoming request. ClientId:{value.ClientId}, RequestId:{value.RequestId}, Currency:{value.Currency}, Timestamp:{value.Timestamp}");
+            _logger.LogDebug($"Processing incoming request. ClientId:{value.ClientId}, RequestId:{value.RequestId}, Currency:{value.Currency}, Timestamp:{value.Timestamp}");
             Guid requestUUID;
             try
             {
@@ -47,55 +50,71 @@ namespace RatesGatwewayApi.Controllers
                 return BadRequest(errorResponse);
             }
 
-            // TODO: Redis chaching 
-
-            var reqExists = db.Stats.Where(s => s.RequestId == requestUUID).Count();
-            if (reqExists != 0)
+            // Check in Redis if the request was served already and add it to the set of served requests if not already present 
+            IDatabase redisConn = _redisMuxer.GetDatabase();
+            if (!redisConn.SetAdd("serverd:req:ids", value.RequestId))
             {
                 var errorResponse = new ErrorResponse
                 {
-                    Status = (int) ResponseStatusCodes.RequestExists,
+                    Status = (int)ResponseStatusCodes.RequestExists,
                     StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.RequestExists],
                 };
                 return BadRequest(errorResponse);
             }
 
-            if (!db.ExchangeRates.Any())
+            // Check for cached value in Redis, if there is no value in Redis the Rates Collector didn't pull any data yet
+            string redisRateKey = $"current:{baseCurrency}:{value.Currency}";
+            string timestampAndValueStr = await redisConn.StringGetAsync(redisRateKey);
+            if (timestampAndValueStr == RedisValue.Null)
             {
                 var errorResponse = new CurrentResponse
                 {
-                    Status = (int) ResponseStatusCodes.NoData,
+                    Status = (int)ResponseStatusCodes.NoData,
                     StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.NoData],
                 };
                 return Created("PostCurrent", errorResponse);
             }
 
-            var erates = db.ExchangeRates
-                .OrderByDescending(er => er.Timestamp)
-                .First();
+            string[] timeStampAndRate = timestampAndValueStr.Split(":");
+            double currTimestamp = Convert.ToDouble(timeStampAndRate[0]);
+            double currRate = Convert.ToDouble(timeStampAndRate[1]);
 
-            var rate = db.Rates
-                .Where(s => s.ExchangeRatesId == erates.ExchangeRatesId && s.Symbol == value.Currency)
-                .First();
+            //if (!db.ExchangeRates.Any())
+            //{
+            //    var errorResponse = new CurrentResponse
+            //    {
+            //        Status = (int) ResponseStatusCodes.NoData,
+            //        StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.NoData],
+            //    };
+            //    return Created("PostCurrent", errorResponse);
+            //}
+
+            //var erates = db.ExchangeRates
+            //    .OrderByDescending(er => er.Timestamp)
+            //    .First();
+
+            //var rate = db.Rates
+            //    .Where(s => s.ExchangeRatesId == erates.ExchangeRatesId && s.Symbol == value.Currency)
+            //    .First();
 
             // Send stats
             var stats = new StatsRequest
             {
                 RequestId = value.RequestId,
                 ClientId = value.ClientId,
-                ServiceName = "EXT_Service_1",
+                ServiceName = "EXT_Service_2",
                 Timestamp = value.Timestamp
             };
             await SendStats(stats);
 
             var response = new CurrentResponse
             {
-                Timestamp = erates.Timestamp,
-                Base = erates.Base,
+                Timestamp = TimestampConversions.UnixTimeStampToDateTime(currTimestamp),
+                Base = baseCurrency,
                 Status = (int) ResponseStatusCodes.Success,
                 StatusMessage = ResponseStatusMessages.Messages[(int) ResponseStatusCodes.Success],
-                ExchangeRate = rate.RateValue,
-                Symbol = rate.Symbol
+                ExchangeRate = currRate,
+                Symbol = value.Currency
             };
 
             return Created("PostCurrent", response);

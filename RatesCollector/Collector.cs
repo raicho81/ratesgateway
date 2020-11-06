@@ -9,6 +9,8 @@ using System.Timers;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using RatesCollector.Models;
+using StackExchange.Redis;
+
 
 namespace RatesCollector
 {
@@ -25,13 +27,17 @@ namespace RatesCollector
         private string apiKey;
         private string baseSymbol;
         private int requestRatesInterval;
+        private readonly ConnectionMultiplexer redisMuxer;
+
         public Collector()
         {
             apiUrl = "http://data.fixer.io/api/latest";
             apiKey = "d795e3d09e9f5b98bbb4dba3192cdff4";
             baseSymbol = "EUR";
             requestRatesInterval = 3600; // Request exchange rates every hour
+            redisMuxer = ConnectionMultiplexer.Connect("redis:6379, password=secret");
         }
+
         private async void OnTimedEvent(Object source, ElapsedEventArgs e)
         {
             var ratesData = await RequestRates();
@@ -109,21 +115,27 @@ namespace RatesCollector
                     db.Add(new ExchangeRates { Base = ratesData.Base, Timestamp = UnixTimeStampToDateTime(ratesData.Timestamp) });
                     db.SaveChanges();
 
-                    // Read the last inserted record from ExchangeRates
-                    Logger.Log("Querying DB for the last inserted exchange rates record id");
                     var er = db.ExchangeRates
                         .OrderByDescending(er => er.ExchangeRatesId)
                         .First();
+                    
+                    IDatabase redisConn = redisMuxer.GetDatabase();
 
-                    // Update
                     Logger.Log($"Updating the rates. Adding new rates in DB for base {ratesData.Base} with timestamp {ratesData.Timestamp} ({UnixTimeStampToDateTime(ratesData.Timestamp).ToString()})");
                     foreach (var symbol in ratesData.Rates.Keys)
                     {
+                        string symbolStr = symbol.ToString();
+                        string rateValueStr = ratesData.Rates[symbol].ToString();
+
+                        // Set new rates in Redis cache first
+                        Logger.Log($"Updating the current rates in Redis. Setting string: current:{baseSymbol}:{symbolStr} {ratesData.Timestamp}:{rateValueStr}");
+                        redisConn.StringSet($"current:{baseSymbol}:{symbolStr}", $"{ratesData.Timestamp}:{rateValueStr}");
+
                         er.Rates.Add(
                             new Rate
                             {
-                                Symbol = symbol.ToString(),
-                                RateValue = Convert.ToDouble(ratesData.Rates[symbol].ToString())
+                                Symbol = symbolStr,
+                                RateValue = Convert.ToDouble(rateValueStr.ToString())
                             });
                     }
                     db.SaveChanges();

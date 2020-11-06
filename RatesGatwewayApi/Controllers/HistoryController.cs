@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 using RatesGatwewayApi.Models;
 
 namespace RatesGatwewayApi.Controllers
@@ -19,12 +20,14 @@ namespace RatesGatwewayApi.Controllers
     [ApiController]
     public class HistoryController : BaseApiController
     {
-        public HistoryController(ExchangeRatesContext db, ILogger<CurrentController> logger, IConfiguration conf, IHttpClientFactory clientFactory)
+        private readonly int expireTimeSeconds = 30;
+        public HistoryController(ExchangeRatesContext db,
+                                 ILogger<CurrentController> logger,
+                                 IConfiguration conf,
+                                 IHttpClientFactory clientFactory,
+                                 IConnectionMultiplexer redisMuxer):
+            base(db, logger, conf, clientFactory, redisMuxer)
         {
-            this.db = db;
-            _logger = logger;
-            Configuration = conf;
-            _clientFactory = clientFactory;
         }
 
         [HttpPost]
@@ -57,8 +60,9 @@ namespace RatesGatwewayApi.Controllers
                 return BadRequest(errorResponse);
             }
 
-            var reqExists = db.Stats.Where(s => s.RequestId == requestUUID).Count();
-            if (reqExists != 0)
+            // Check in Redis if the request was served already and add it to the set of served requests if not already present
+            IDatabase redisConn = _redisMuxer.GetDatabase();
+            if (!redisConn.SetAdd("serverd:req:ids", value.RequestId))
             {
                 var errorResponse = new ErrorResponse
                 {
@@ -73,43 +77,73 @@ namespace RatesGatwewayApi.Controllers
             {
                 RequestId = value.RequestId,
                 ClientId = value.ClientId,
-                ServiceName = "EXT_Service_1",
+                ServiceName = "EXT_Service_2",
                 Timestamp = value.Timestamp
             };
             await SendStats(stats);
 
-            DateTime dtNow = DateTime.Now.ToUniversalTime();
-            DateTime dtBegin = dtNow.AddMilliseconds(-value.Period * 3600 * 1000);
-            var erates = db.ExchangeRates
-                .Where(er => (er.Timestamp <= dtNow) && (er.Timestamp >= dtBegin))
-                .Include(er => er.Rates)
-                .ToList();
-            
-            if (!erates.Any())
+            string redisHistHashKey = $"history:{baseCurrency}:{value.Currency}:{value.Period}";
+            string historyData = await redisConn.StringGetAsync(redisHistHashKey);
+            if(historyData != RedisValue.Null)
             {
-                var errorResponse = new ErrorResponse
+                DateTime dtNow = DateTime.Now.ToUniversalTime();
+                var response = new HistoryResponse()
                 {
-                    Status = (int)ResponseStatusCodes.NoDataForPeriod,
-                    StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.NoDataForPeriod],
+                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow),
+                    Symbol = value.Currency,
+                    Status = (int)ResponseStatusCodes.Success,
+                    StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
                 };
-                return Created("PostHistory", errorResponse);
+
+                string[] historyDataEntries = historyData.Split(";");
+                foreach (var entry in historyDataEntries)
+                {
+                    string[] entryKeyVal = entry.Split(":");
+                    response.ExchangeRates.Add($"{entryKeyVal[0]}", double.Parse(entryKeyVal[1]));
+                }
+                return Created("PostHistory", response);
             }
-
-            var response = new HistoryResponse()
             {
-                Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow),
-                Symbol = value.Symbol,
-                Status = (int)ResponseStatusCodes.Success,
-                StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
-            };
+                DateTime dtNow = DateTime.Now.ToUniversalTime();
+                DateTime dtBegin = dtNow.AddMilliseconds(-value.Period * 3600 * 1000);
+                var erates = db.ExchangeRates
+                    .Where(er => (er.Timestamp <= dtNow) && (er.Timestamp >= dtBegin))
+                    .Include(er => er.Rates)
+                    .ToList();
 
-            foreach (var erate in erates)
-            {
-                var rate = erate.Rates.Where(r => r.Symbol == value.Symbol).First();
-                response.ExchangeRates.Add($"{TimestampConversions.DateTimeToUnixTime(erate.Timestamp)}", rate.RateValue);
+                if (!erates.Any())
+                {
+                    var errorResponse = new ErrorResponse
+                    {
+                        Status = (int)ResponseStatusCodes.NoDataForPeriod,
+                        StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.NoDataForPeriod],
+                    };
+                    return Created("PostHistory", errorResponse);
+                }
+
+                var response = new HistoryResponse()
+                {
+                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow),
+                    Symbol = value.Currency,
+                    Status = (int)ResponseStatusCodes.Success,
+                    StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
+                };
+
+                StringBuilder histData = new StringBuilder();
+                foreach (var erate in erates)
+                {
+                    var rate = erate.Rates.Where(r => r.Symbol == value.Currency).First();
+                    double timestamp = TimestampConversions.DateTimeToUnixTime(erate.Timestamp);
+                    histData.Append($"{timestamp}:{rate.RateValue};");
+                    response.ExchangeRates.Add($"{timestamp}", rate.RateValue);
+                }
+                histData.Remove(histData.Length - 1, 1);
+
+                // Saved history data in Redis will expire after 60 seconds
+                redisConn.StringSet(redisHistHashKey, histData.ToString(), new TimeSpan(0, 0, expireTimeSeconds));
+                
+                return Created("PostHistory", response);
             }
-
-            return Created("PostHistory", response);
         }
     }
 }

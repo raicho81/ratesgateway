@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RatesGatwewayApi.Models;
+using StackExchange.Redis;
 
 namespace RatesGatwewayApi
 {
@@ -34,7 +35,9 @@ namespace RatesGatwewayApi
                     options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
                 }
             );
-
+            // Add Redis connection muxer as Singleton
+            ConnectionMultiplexer cm = ConnectionMultiplexer.Connect($"{Configuration.GetValue<string>("RedisHostName")}:{Configuration.GetValue<string>("RedisHostPort")}, password={Configuration.GetValue<string>("RedisPassword")}");
+            services.AddSingleton<IConnectionMultiplexer>(cm);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

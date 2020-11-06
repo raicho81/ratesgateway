@@ -10,6 +10,9 @@ services:
   redis:
     image: redis
     restart: always
+    command: redis-server --requirepass secret --appendonly yes
+    volumes:
+      - gateway-redis-data:/data
 
   db:
     image: postgres
@@ -46,3 +49,4 @@ services:
 
 volumes:
   gateway-postgres-data:
+  gateway-redis-data:

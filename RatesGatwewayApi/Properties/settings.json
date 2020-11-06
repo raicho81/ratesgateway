@@ -1,3 +1,0 @@
-{
-  "ConnectionString": "Host=db;Database=postgres;Username=postgres;Password=secret"
-}

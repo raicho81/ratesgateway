@@ -36,6 +36,5 @@ CREATE TABLE "public"."Stats" (
     "ServiceName" character varying(255) NOT NULL,
     "RequestId" uuid NOT NULL,
     "ClientId" character varying(100) NOT NULL,
-    CONSTRAINT "Stats_Id" PRIMARY KEY ("Id"),
-    CONSTRAINT "Stats_RequestId" UNIQUE ("RequestId")
+    CONSTRAINT "Stats_Id" PRIMARY KEY ("Id")
 ) WITH (oids = false);

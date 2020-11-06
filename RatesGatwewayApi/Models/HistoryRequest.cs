@@ -20,7 +20,7 @@ namespace RatesGatwewayApi.Models
 
         [JsonPropertyName("currency")]
         [Required]
-        public string Symbol { get; set; }
+        public string Currency { get; set; }
 
         [JsonPropertyName("period")]
         [Required]

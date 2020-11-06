@@ -1,0 +1,1 @@
+docker-compose -f gateway-stack.yml up
