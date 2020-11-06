@@ -25,3 +25,10 @@
 }
 
 
+// XML Api
+<command id="1234" >
+    <get consumer="13617162" >
+        <currency>EUR</currency>
+    </get>
+</command>
+
