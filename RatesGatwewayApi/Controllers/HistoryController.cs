@@ -89,7 +89,7 @@ namespace RatesGatwewayApi.Controllers
                 DateTime dtNow = DateTime.Now.ToUniversalTime();
                 var response = new HistoryResponse()
                 {
-                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow),
+                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow.ToUniversalTime()),
                     Symbol = value.Currency,
                     Status = (int)ResponseStatusCodes.Success,
                     StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]
@@ -123,7 +123,7 @@ namespace RatesGatwewayApi.Controllers
 
                 var response = new HistoryResponse()
                 {
-                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow),
+                    Timestamp = (int)TimestampConversions.DateTimeToUnixTime(dtNow.ToUniversalTime()),
                     Symbol = value.Currency,
                     Status = (int)ResponseStatusCodes.Success,
                     StatusMessage = ResponseStatusMessages.Messages[(int)ResponseStatusCodes.Success]

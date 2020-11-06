@@ -26,9 +26,11 @@
 
 
 // XML Api
-<command id="1234" >
+<command id="89c58c6a-5ee6-4cff-a02e-866108219e87" >
     <get consumer="13617162" >
-        <currency>EUR</currency>
+        <currency>AUD</currency>
     </get>
 </command>
+
+
 
