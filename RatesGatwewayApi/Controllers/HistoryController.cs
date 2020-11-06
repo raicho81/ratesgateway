@@ -62,7 +62,7 @@ namespace RatesGatwewayApi.Controllers
 
             // Check in Redis if the request was served already and add it to the set of served requests if not already present
             IDatabase redisConn = _redisMuxer.GetDatabase();
-            if (!redisConn.SetAdd("serverd:req:ids", value.RequestId))
+            if (!await redisConn.SetAddAsync(servedRequestsIDsSetKey, value.RequestId))
             {
                 var errorResponse = new ErrorResponse
                 {
