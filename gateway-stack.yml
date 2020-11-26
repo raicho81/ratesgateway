@@ -53,6 +53,7 @@ services:
     depends_on:
       - db
       - redis
+      - stats_collector
     expose:
       - 80
 

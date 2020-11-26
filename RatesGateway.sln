@@ -7,13 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RatesCollector", "RatesColl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{90A9CFCE-C87C-4626-9947-89BD2A9BA1EB}"
 	ProjectSection(SolutionItems) = preProject
+		build_docker_images.cmd = build_docker_images.cmd
 		DB_Create_Script.sql = DB_Create_Script.sql
 		gateway-stack.yml = gateway-stack.yml
+		nginx.conf = nginx.conf
+		start_gateway_stack.cmd = start_gateway_stack.cmd
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RatesGatwewayApi", "RatesGatwewayApi\RatesGatwewayApi.csproj", "{26195105-D8BA-4EBC-99B1-DAF4233382E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatisticsCollector", "StatisticsCollector\StatisticsCollector.csproj", "{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatisticsCollector", "StatisticsCollector\StatisticsCollector.csproj", "{5FF2793C-CFC0-4300-8C25-073A97EEF2B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
