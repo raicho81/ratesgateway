@@ -36,6 +36,5 @@ namespace RatesGatwewayApi.Models
 
         [XmlAttribute("period")]
         public int period { get; set; }
-
     }
 }

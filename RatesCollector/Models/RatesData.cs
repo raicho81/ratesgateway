@@ -10,7 +10,6 @@ namespace RatesCollector
         public bool Success { get; set; }
 
         [JsonPropertyName("timestamp")]
-
         public double Timestamp { get; set; }
 
         [JsonPropertyName("base")]
@@ -21,6 +20,7 @@ namespace RatesCollector
 
         [JsonPropertyName("rates")]
         public Hashtable Rates { get; set; }
+
         [JsonPropertyName("error")]
         public Hashtable Error { get; set; } 
     }

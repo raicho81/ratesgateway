@@ -21,7 +21,7 @@ namespace RatesGatwewayApi.Controllers
     [ApiController]
     public class CommandController : BaseApiController
     {
-        private readonly int expireTimeSeconds = 30;
+        private readonly int expireTimeSeconds;
         public CommandController(ExchangeRatesContext db,
                                  ILogger<CurrentController> logger,
                                  IConfiguration conf,
@@ -29,6 +29,7 @@ namespace RatesGatwewayApi.Controllers
                                  IConnectionMultiplexer redisMuxer) :
             base(db, logger, conf, clientFactory, redisMuxer)
         {
+            expireTimeSeconds = Configuration.GetValue<int>("RedisHistoryExpireTime");
         }
 
         // POST api/<CommandController>
@@ -188,7 +189,7 @@ namespace RatesGatwewayApi.Controllers
                     }
                     histData.Remove(histData.Length - 1, 1);
 
-                    // Saved history data in Redis will expire after 60 seconds
+                    // Saved history data in Redis will expire after expireTimeSeconds seconds
                     redisConn.StringSet(redisHistHashKey, histData.ToString(), new TimeSpan(0, 0, expireTimeSeconds));
 
                     return Created("PostCommandHistory", response);

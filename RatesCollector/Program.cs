@@ -20,7 +20,7 @@ namespace RatesCollector
             }
             catch (Exception e)
             {
-                Logger.Log(e.ToString());
+                Logger.Log(e.Message);
                 return;
             }
             collector = new Collector(settings.apiUrl, settings.apiKey, settings.baseCurrency, settings.requestRatesInterval, settings.redisHost, settings.redisPort, settings.redisPassword);
