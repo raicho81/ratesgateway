@@ -62,7 +62,7 @@ namespace StatisticsCollector.Controllers
                     Timestamp = TimestampConversions.UnixTimeStampToDateTime(value.Timestamp),
                 }
             );
-            try { 
+            try {
                 await db.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException e)
