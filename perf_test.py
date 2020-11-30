@@ -1,25 +1,25 @@
 import threading, queue
-import itertools
 import json
 import requests
 import uuid
 import time
-
+import random
 
 q = queue.Queue(maxsize=1000)
 avg_requests_per_second = 0
 avg_requests_per_second_lock = threading.Lock()
-
+NUM_CLIENTS = 20
 
 def show_speed(*args, **kwargs):
     global avg_requests_per_second
     global calc_speed_timer
+    global q
     lock = kwargs["lock"]
     lock.acquire()
     sum_ = avg_requests_per_second
     avg_requests_per_second = 0
     lock.release()
-    print("{} REQUESTS PER SECOND".format(sum_ / 10.0))
+    print("{} REQUESTS PER SECOND. QUEUE SIZE[{}]".format(sum_ / 10.0, q.qsize()))
     calc_speed_timer = threading.Timer(10, show_speed, kwargs={"lock": lock})
     calc_speed_timer.start()
 
@@ -28,10 +28,15 @@ def client(*args, **kwargs):
     lock = kwargs["lock"]
     while True:
         item = q.get()
-        #print(f'Working on {item}')
-        response = requests.post("http://192.168.1.54:4000/json_api/current", data=item, headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate'})
+        try:
+            response = requests.post(item['url'], data=json.dumps(item['body']), headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate'})
+            if response.status_code != 201:
+                print(f"Error. Response: {response.content}")
+            q.task_done()
+        except requests.exceptions.ConnectionError as e:
+            print(e)
         #print(f'Finished {item}. Response: {response.content}')
-        q.task_done()
+
         lock.acquire()
         avg_requests_per_second += 1
         lock.release()
@@ -40,20 +45,37 @@ calc_speed_timer = threading.Timer(10, show_speed, kwargs={"lock": avg_requests_
 calc_speed_timer.start()
 
 # turn-on the client threads
+currencies = ["USD", "AUD", "BGN", "JPY", "GBP"]
 clients = []
-[clients.append(threading.Thread(target=client, daemon=True, kwargs={'lock': avg_requests_per_second_lock})) for _ in range(0, 5)]
-[clients[_].start() for _ in range(0, 5)]
+[clients.append(threading.Thread(target=client, daemon=True, kwargs={'lock': avg_requests_per_second_lock})) for _ in range(0, NUM_CLIENTS)]
+[clients[_].start() for _ in range(0, NUM_CLIENTS)]
 
-for _ in itertools.count():
-    payload = {
-     "requestId": str(uuid.uuid4()),
-     "timestamp": int(time.time()),
-     "client": "1234",
-     "currency": "USD"
-    }
-    q.put(json.dumps(payload))
+while True:
+    t = time.time()
+    time.localtime(t)
+    gmtime = time.gmtime(t)
+    requests_list = [
+                ({'url': 'http://192.168.1.54:4000/json_api/current',
+                  'body':
+                    {
+                     "requestId": str(uuid.uuid4()),
+                     "timestamp": int(time.mktime(gmtime)),
+                     "client": "1234",
+                     "currency": random.choice(currencies)
+                    }
+                  }
+                 ),
+                ({'url':'http://192.168.1.54:4000/json_api/history',
+                  'body':
+                    {
+                     "requestId": str(uuid.uuid4()),
+                     "timestamp": int(time.mktime(gmtime)),
+                     "client": "1234",
+                     "currency": random.choice(currencies),
+                     "period": int(random.random()*1000)+1500, 
+                    }
+                 }
+                )
+    ]
+    q.put(random.choice(requests_list))
 
-
-clients[0].join()
-print('All task requests sent\n', end='')
-print('All work completed')
