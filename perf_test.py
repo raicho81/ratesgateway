@@ -29,7 +29,7 @@ def client(*args, **kwargs):
     while True:
         item = q.get()
         #print(f'Working on {item}')
-        response = requests.post("http://localhost:4000/json_api/current", data=item, headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate'})
+        response = requests.post("http://192.168.1.54:4000/json_api/current", data=item, headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate'})
         #print(f'Finished {item}. Response: {response.content}')
         q.task_done()
         lock.acquire()
