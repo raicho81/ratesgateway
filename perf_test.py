@@ -6,10 +6,17 @@ import uuid
 import time
 import random
 
-q = queue.Queue(maxsize=1000)
+q = queue.Queue(maxsize=100)
 avg_requests_per_second = 0
 avg_requests_per_second_lock = threading.Lock()
 NUM_CLIENTS = 20
+HOST = '192.168.1.54'
+PORT = 4000
+HEADERS = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Accept-Encoding': 'gzip, deflate'
+}
 
 def show_speed(*args, **kwargs):
     global avg_requests_per_second
@@ -30,13 +37,13 @@ def client(*args, **kwargs):
     while True:
         item = q.get()
         try:
-            response = requests.post(item['url'], data=json.dumps(item['body']), headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate'})
+            response = requests.post(item['url'], data=json.dumps(item['body']), headers=HEADERS)
             if response.status_code != 201:
                 print(f"Error. Response: {response.content}")
             q.task_done()
         except requests.exceptions.ConnectionError as e:
             print(e)
-        #print(f'Finished {item}. Response: {response.content}')
+        print(f'Finished {item}. Response: {response.content}')
 
         lock.acquire()
         avg_requests_per_second += 1
@@ -51,29 +58,31 @@ clients = []
 [clients.append(threading.Thread(target=client, daemon=True, kwargs={'lock': avg_requests_per_second_lock})) for _ in range(0, NUM_CLIENTS)]
 [clients[_].start() for _ in range(0, NUM_CLIENTS)]
 
-while True:
+for _ in range(100):
     t = time.time()
-    time.localtime(t)
     gmtime = time.gmtime(t)
+    cur = random.choice(currencies)
+    timestamp = int(time.mktime(gmtime))
+    UUID = str(uuid.uuid4())
     requests_list = [
-                ({'url': 'http://192.168.1.54:4000/json_api/current',
+                ({'url': f"http://{HOST}:{PORT}/json_api/current",
                   'body':
                     {
-                     "requestId": str(uuid.uuid4()),
-                     "timestamp": int(time.mktime(gmtime)),
+                     "requestId": UUID,
+                     "timestamp": timestamp,
                      "client": "1234",
-                     "currency": random.choice(currencies)
+                     "currency": cur
                     }
                   }
                  ),
-                ({'url':'http://192.168.1.54:4000/json_api/history',
+                ({'url':f"http://{HOST}:{PORT}/json_api/history",
                   'body':
                     {
-                     "requestId": str(uuid.uuid4()),
-                     "timestamp": int(time.mktime(gmtime)),
+                     "requestId": UUID,
+                     "timestamp": timestamp,
                      "client": "1234",
-                     "currency": random.choice(currencies),
-                     "period": int(random.random()*1000)+1500, 
+                     "currency": cur,
+                     "period": int(random.random()*1000)+1000,
                     }
                  }
                 )

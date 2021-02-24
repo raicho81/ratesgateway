@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		gateway-stack.yml = gateway-stack.yml
 		nginx.conf = nginx.conf
 		start_gateway_stack.cmd = start_gateway_stack.cmd
+		test-requests.txt = test-requests.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RatesGatwewayApi", "RatesGatwewayApi\RatesGatwewayApi.csproj", "{26195105-D8BA-4EBC-99B1-DAF4233382E2}"
