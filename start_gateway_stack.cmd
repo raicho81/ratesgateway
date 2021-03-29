@@ -1,1 +1,1 @@
-docker-compose -f gateway-stack.yml up --scale rates_gateway_api=5 --scale stats_collector=3
+docker-compose up --scale rates_gateway_api=2 --scale stats_collector=2 > NUL
